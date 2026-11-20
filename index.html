@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#50305e">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="始業時刻と休憩込みの拘束時間から終業時刻を一発計算。">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <title>退勤じかん電卓</title>
+  <style>
+    :root { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; color: #432945; background: #fdf8fc; }
+    * {box-sizing: border-box;}
+    html {min-height:100%;}
+    body { margin:0; min-height:100svh; background:radial-gradient(ellipse at 90% 5%, #ffe0f1 0, transparent 48%),radial-gradient(ellipse at 2% 95%,#eadbff 0,transparent 48%), #fdf8fc; }
+    main { width:min(100%, 480px); min-height:100svh; margin:auto; padding: max(24px,env(safe-area-inset-top)) 21px max(30px,env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:22px; }
+    .brand {display:flex; align-items:center; gap:13px;}
+    .brand-mark {width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(145deg,#f7b4db,#cba2f6);box-shadow:0 8px 19px #b27dc532;font-size:27px;}
+    h1 {font-size:clamp(24px,7vw,30px);line-height:1.2;margin:0;letter-spacing:.02em;font-weight:850;}
+    .subtitle {color:#8f718e;font-size:12px;margin:5px 0 0;font-weight:650;letter-spacing:.03em;}
+    .paper {background:#ffffffeb; border:1px solid #f1ddea; border-radius:26px; padding:23px 20px; box-shadow:0 16px 38px #aa71911b;}
+    .field + .field {margin-top:21px;}
+    label {display:block;font-weight:800;font-size:15px;margin-bottom:9px;}
+    .hint {font-size:12px;color:#896c86;font-weight:500;margin-left:7px;}
+    .input-row {display:flex;gap:9px;align-items:center;}
+    input {display:block;min-width:0;width:100%;height:66px;background:#fdf8fc;border:2px solid #ead5e7;border-radius:16px;padding:0 17px;color:#4e2c58;font:800 31px/1 -apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif;letter-spacing:.02em;font-variant-numeric:tabular-nums;outline:none;caret-color:#a24689;}
+    input:focus {border-color:#ac70c5;box-shadow:0 0 0 4px #b787e520;}
+    .unit {flex:0 0 auto;min-width:30px;color:#886985;font-weight:700;}
+    .interpreted {min-height:19px;margin:8px 0 0;font-size:12px;color:#8e6b89;}
+    .result {color:white;background:linear-gradient(135deg,#6b3c7a,#bd589b 78%,#dc7fae);border-radius:27px;padding:28px 18px 22px;box-shadow:0 18px 38px #924e7a3a;text-align:center;}
+    .result-label {font-size:14px;letter-spacing:.2em;font-weight:750;color:#f8e4f4;}
+    .clock {font-size:clamp(59px,17vw,82px);font-weight:850;line-height:1.23;letter-spacing:-.04em;font-variant-numeric:tabular-nums;margin:9px 0 1px;}
+    .plain {font-size:14px;color:#f9e4f3;min-height:20px;}
+    .copy {display:flex;align-items:center;justify-content:center;gap:8px;margin:19px auto 0;border:0;min-height:46px;width:min(100%,230px);border-radius:24px;background:white;color:#7a417d;font-size:14px;font-weight:850;cursor:pointer;touch-action:manipulation;}
+    .copy:active {transform:translateY(1px);}
+    .copy:disabled{opacity:.45;cursor:default;}
+    .foot {color:#967f96;font-size:12px;line-height:1.8;margin:0 2px;}
+    .foot strong {color:#6d4c72;}
+    .reset {align-self:center;border:0;background:none;color:#956b90;font-size:13px;text-decoration:underline;text-underline-offset:4px;padding:4px;cursor:pointer;}
+    .error {color:#ffebef;font-weight:700;font-size:13px;}
+    @media (max-height:610px) and (orientation:landscape) {main{max-width:570px;gap:12px;padding-top:14px;padding-bottom:14px;} .paper{padding:15px;} .field + .field{margin-top:11px;}input{height:48px;font-size:26px}.result{padding:15px}.clock{font-size:54px;margin:0}.copy{min-height:40px;margin-top:6px}.brand-mark{height:40px;width:40px}h1{font-size:22px}}
+    @media (prefers-reduced-motion: no-preference){.copy{transition:transform .12s ease,background-color .15s ease}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="brand">
+    <div class="brand-mark" aria-hidden="true">✦</div>
+    <div><h1>退勤じかん電卓</h1><p class="subtitle">休憩込みでサクッと計算 ♡</p></div>
+  </header>
+  <section class="paper" aria-label="入力">
+    <div class="field">
+      <label for="start">始業時刻 <span class="hint">9:21 → 921</span></label>
+      <div class="input-row"><input id="start" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" value="921" aria-describedby="start-hint"><span class="unit">時刻</span></div>
+    </div>
+    <div class="field">
+      <label for="duration">拘束時間 <span class="hint">10.5時間 → 1050</span></label>
+      <div class="input-row"><input id="duration" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="1050" aria-describedby="duration-hint"><span class="unit">時間</span></div>
+      <div id="duration-hint" class="interpreted" aria-live="polite">10.5時間 ＝ 10時間30分</div>
+    </div>
+  </section>
+  <section class="result" aria-live="polite" aria-label="計算結果">
+    <div class="result-label">終業時刻</div>
+    <div id="clock" class="clock">19:51</div>
+    <div id="raw" class="plain">電卓式：1951</div>
+    <button id="copy" class="copy" type="button">⌁&nbsp; 終業時刻をコピー</button>
+  </section>
+  <p class="foot"><strong>入力ルール：</strong>「1050」は10時間50分ではなく、<strong>10.50時間（＝10時間30分）</strong>として計算するわよ。<br>休憩時間を引かずに、拘束時間をそのまま入れてね。</p>
+  <button class="reset" type="button" id="reset">入力を初期値に戻す</button>
+</main>
+<script>
+(function(){
+  'use strict';
+  const startEl=document.getElementById('start');
+  const durationEl=document.getElementById('duration');
+  const clockEl=document.getElementById('clock');
+  const rawEl=document.getElementById('raw');
+  const detailEl=document.getElementById('duration-hint');
+  const copyBtn=document.getElementById('copy');
+  const resetBtn=document.getElementById('reset');
+  const defaults={start:'921',duration:'1050'};
+  const pad=v=>String(v).padStart(2,'0');
+  function parseClock(raw){
+    let v=raw.trim();
+    if (/^\d{1,2}:\d{2}$/.test(v)) {const [h,m]=v.split(':').map(Number); return h<24&&m<60?h*60+m:null;}
+    if(!/^\d{1,4}$/.test(v)) return null;
+    const n=Number(v),h=Math.floor(n/100),m=n%100;
+    return h<24&&m<60?h*60+m:null;
+  }
+  function parseHours(raw){
+    const v=raw.trim();
+    if (/^\d{1,4}$/.test(v)) return Number(v)/100;
+    if (/^\d{1,2}\.\d{1,2}$/.test(v)) return Number(v);
+    return null;
+  }
+  function recalc(){
+    const start=parseClock(startEl.value);
+    const hours=parseHours(durationEl.value);
+    if(hours===null){detailEl.textContent='例：1050 → 10.5時間 / 1025 → 10.25時間';}
+    else {const durMin=Math.round(hours*60);detailEl.textContent=`${hours.toLocaleString('ja-JP',{maximumFractionDigits:2})}時間 ＝ ${Math.floor(durMin/60)}時間${durMin%60}分`;}
+    if(start===null||hours===null||hours>72){
+      clockEl.textContent='--:--';rawEl.textContent='始業・拘束時間の入力を確認してね';rawEl.classList.add('error');copyBtn.disabled=true;copyBtn.dataset.text='';return;
+    }
+    const end=start+Math.round(hours*60), day=Math.floor(end/1440), dayMin=end%1440;
+    const stamp=`${pad(Math.floor(dayMin/60))}:${pad(dayMin%60)}`;
+    clockEl.textContent=stamp;
+    rawEl.textContent=`電卓式：${pad(Math.floor(dayMin/60))}${pad(dayMin%60)}${day>0?'（翌日'+(day>1?'以降':'')+'）':''}`;
+    rawEl.classList.remove('error');copyBtn.disabled=false;copyBtn.dataset.text=stamp;
+    try{localStorage.setItem('taikin-start',startEl.value);localStorage.setItem('taikin-duration',durationEl.value);}catch(e){}
+  }
+  try {const savedStart=localStorage.getItem('taikin-start'),savedDuration=localStorage.getItem('taikin-duration');if(savedStart!==null)startEl.value=savedStart;if(savedDuration!==null)durationEl.value=savedDuration;}catch(e){}
+  startEl.addEventListener('input',recalc);
+  durationEl.addEventListener('input',recalc);
+  startEl.addEventListener('focus',()=>startEl.select());
+  durationEl.addEventListener('focus',()=>durationEl.select());
+  copyBtn.addEventListener('click',async()=>{
+    const text=copyBtn.dataset.text;
+    if(!text)return;
+    try{
+      if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);}
+      else {const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();const ok=document.execCommand('copy');document.body.removeChild(t);if(!ok)throw new Error('copy unsupported');}
+      copyBtn.textContent='✓ コピーしたわ！';setTimeout(()=>{copyBtn.textContent='⌁  終業時刻をコピー';},1500);
+    }catch(e){copyBtn.textContent='コピーできない環境みたい';setTimeout(()=>{copyBtn.textContent='⌁  終業時刻をコピー';},1800);}
+  });
+  resetBtn.addEventListener('click',()=>{startEl.value=defaults.start;durationEl.value=defaults.duration;recalc();});
+  recalc();
+  if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  }
+})();
+</script>
+</body>
+</html>
